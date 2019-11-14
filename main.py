@@ -1,7 +1,6 @@
 from collections import defaultdict
 import datetime
 import logging
-import requests
 
 from yahoo_oauth import OAuth2
 
@@ -14,13 +13,13 @@ if not oauth.token_is_valid():
 
 #resp = oauth.session.get('https://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1/games;game_keys=nfl/leagues?format=json')
 #print(resp.text)
-league_key = '390.l.1079029'
-league_id = '1079029'
+LEAGUE_KEY = '390.l.1079029'
+LEAGUE_ID = '1079029'
 
 def get_transactions():
     # returns transactions in chronologically increasing order
     print('Getting transactions...')
-    url = 'https://fantasysports.yahooapis.com/fantasy/v2/league/{}/transactions?format=json'.format(league_key)
+    url = 'https://fantasysports.yahooapis.com/fantasy/v2/league/{}/transactions?format=json'.format(LEAGUE_KEY)
     resp = oauth.session.get(url)
     print(resp)
 
@@ -112,9 +111,9 @@ def parse_drop(transact, transacts_clean):
     transacts_clean.append(drop_clean)
 
 def print_player_to_adds(transacts_clean):
-    print '-------------------------------------'
-    print 'print_player_to_adds'
-    print '-------------------------------------'
+    print('-------------------------------------')
+    print('print_player_to_adds')
+    print('-------------------------------------')
     player_to_adds = defaultdict(list) # list of faab bids
     for transact in transacts_clean:
         if transact['type'] == 'add':
@@ -137,9 +136,9 @@ def faabs_for_player(player, transacts):
     return faabs
 
 def faab_from_player_drops(transacts_clean, summary=False):
-    print '-------------------------------------'
-    print 'faab_from_player_drops'
-    print '-------------------------------------'
+    print('-------------------------------------')
+    print('faab_from_player_drops')
+    print('-------------------------------------')
     manager_to_players_dropped = defaultdict(list)
     manager_player_dict = {}
     manager_to_num_drops = defaultdict(int)
@@ -164,7 +163,7 @@ def faab_from_player_drops(transacts_clean, summary=False):
         manager_to_faab_spent_on_dropped_players[manager] = faabs_sum
 
     for manager in sorted(manager_to_faab_spent_on_dropped_players,
-            key=lambda x: manager_to_faab_spent_on_dropped_players[x], reverse=True):
+                          key=lambda x: manager_to_faab_spent_on_dropped_players[x], reverse=True):
         players_dropped = manager_to_players_dropped[manager]
         if summary:
             print u'{:<25s} - {:<2s} drops - ${:.0f}'.format(
@@ -192,9 +191,9 @@ def search_for_drops(player, transacts):
     return False
 
 def good_adds(transacts_clean):
-    print '-------------------------------------'
-    print 'good_adds'
-    print '-------------------------------------'
+    print('-------------------------------------')
+    print('good_adds - players added that have not been dropped')
+    print('-------------------------------------')
     manager_to_players = defaultdict(list)
     for i in range(len(transacts_clean)):
         transact = transacts_clean[i]
@@ -207,6 +206,24 @@ def good_adds(transacts_clean):
                 manager_to_players[transact['manager']].append(transact['player'])
     for manager, players_arr in sorted(manager_to_players.items()):
         print(u'{:<25s} - {}'.format(manager, players_arr))
+    print('')
+
+def top_adds(transacts_clean):
+    print('-------------------------------------')
+    print('top_adds - highest FAAB spent per manager')
+    print('-------------------------------------')
+    manager_to_top_player = {}
+    for i in range(len(transacts_clean)):
+        transact = transacts_clean[i]
+        if transact['type'] == 'add':
+            if transact['manager'] not in manager_to_top_player:
+                manager_to_top_player[transact['manager']] = (transact['player'], transact.get('faab', 0))
+            else:
+                if transact.get('faab', 0) > manager_to_top_player[transact['manager']][1]:
+                    manager_to_top_player[transact['manager']] = (transact['player'], transact.get('faab', 0))
+    for manager, player in sorted(manager_to_top_player.items(),
+                                  key=lambda x: x[1][1], reverse=True):
+        print(u'{:<25s} - ${:.0f} - {}'.format(manager, player[1], player[0]))
     print('')
 
 def clean_add_drops(transacts_arr):
@@ -225,9 +242,10 @@ def main():
     print(datetime.datetime.now())
     transacts_arr = get_transactions()
     transacts_clean = clean_add_drops(transacts_arr)
-    #print_player_to_adds(transacts_clean)
-    #faab_from_player_drops(transacts_clean)
+    print_player_to_adds(transacts_clean)
+    faab_from_player_drops(transacts_clean)
     good_adds(transacts_clean)
+    top_adds(transacts_clean)
 
 if __name__ == '__main__':
     main()
