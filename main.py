@@ -151,7 +151,7 @@ def faab_from_player_drops(transacts_clean, summary=False):
                 manager_to_players_dropped[transact['manager']].append(
                     (transact['player'], faabs))
                 manager_player_dict[(transact['manager'], transact['player'])] = True
-    
+
     # get sort order
     manager_to_faab_spent_on_dropped_players = {}
     for manager, players_dropped in list(manager_to_players_dropped.items()):
@@ -166,8 +166,8 @@ def faab_from_player_drops(transacts_clean, summary=False):
                           key=lambda x: manager_to_faab_spent_on_dropped_players[x], reverse=True):
         players_dropped = manager_to_players_dropped[manager]
         if summary:
-            print u'{:<25s} - {:<2s} drops - ${:.0f}'.format(
-                manager, str(manager_to_num_drops[manager]), manager_to_faab_spent_on_dropped_players[manager])
+            print(u'{:<25s} - {:<2s} drops - ${:.0f}'.format(
+                manager, str(manager_to_num_drops[manager]), manager_to_faab_spent_on_dropped_players[manager]))
         else:
             print('-----------------------')
             print(manager)
@@ -243,7 +243,7 @@ def main():
     transacts_arr = get_transactions()
     transacts_clean = clean_add_drops(transacts_arr)
     print_player_to_adds(transacts_clean)
-    faab_from_player_drops(transacts_clean)
+    faab_from_player_drops(transacts_clean, summary=False)
     good_adds(transacts_clean)
     top_adds(transacts_clean)
 
