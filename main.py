@@ -1,6 +1,7 @@
 from collections import defaultdict
 import datetime
 import logging
+import sys
 
 from yahoo_oauth import OAuth2
 
@@ -11,10 +12,15 @@ oauth = OAuth2(None, None, from_file='oauth2.json')
 if not oauth.token_is_valid():
     oauth.refresh_access_token()
 
+# Uncomment next two three lines to get the latest league key and ID
+# Enter the resulting league key and ID on the next lines to run the analysis
 #resp = oauth.session.get('https://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1/games;game_keys=nfl/leagues?format=json')
 #print(resp.text)
-LEAGUE_KEY = '390.l.1079029'
-LEAGUE_ID = '1079029'
+#sys.exit(0)
+
+# Fill with own LEAGUE_KEY and LEAGUE_ID
+LEAGUE_KEY = '399.l.369271' # 2019: '390.l.1079029'
+LEAGUE_ID = '369271' # 2019: '1079029'
 
 def get_transactions():
     # returns transactions in chronologically increasing order
@@ -112,7 +118,7 @@ def parse_drop(transact, transacts_clean):
 
 def print_player_to_adds(transacts_clean):
     print('-------------------------------------')
-    print('print_player_to_adds')
+    print('Players most added:')
     print('-------------------------------------')
     player_to_adds = defaultdict(list) # list of faab bids
     for transact in transacts_clean:
@@ -192,7 +198,7 @@ def search_for_drops(player, transacts):
 
 def good_adds(transacts_clean):
     print('-------------------------------------')
-    print('good_adds - players added that have not been dropped')
+    print('Good Adds: players added that have not been dropped')
     print('-------------------------------------')
     manager_to_players = defaultdict(list)
     for i in range(len(transacts_clean)):
@@ -204,13 +210,14 @@ def good_adds(transacts_clean):
             if not search_for_drops(transact['player'], transacts_clean[i+1:]):
                 # player still on roster
                 manager_to_players[transact['manager']].append(transact['player'])
-    for manager, players_arr in sorted(manager_to_players.items()):
-        print(u'{:<25s} - {}'.format(manager, players_arr))
+    for manager, players_arr in sorted(manager_to_players.items(),
+                                       key=lambda x: len(x[1]), reverse=True):
+        print(u'{:<25s} - {} - {}'.format(manager, len(players_arr), players_arr))
     print('')
 
 def top_adds(transacts_clean):
     print('-------------------------------------')
-    print('top_adds - highest FAAB spent per manager')
+    print('Most Expensive Adds: - highest FAAB waiver pickup')
     print('-------------------------------------')
     manager_to_top_player = {}
     for i in range(len(transacts_clean)):
